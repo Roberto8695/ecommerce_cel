@@ -1,0 +1,131 @@
+@startuml EcommerceDB_Diagram
+
+' Configuración
+hide methods
+hide stereotypes
+skinparam linetype ortho
+
+' Entidades (Tablas)
+
+class users {
+  + user_id [PK]
+  --
+  email
+  password_hash
+  first_name
+  last_name
+  address
+  phone
+  created_at
+  updated_at
+}
+
+class brands {
+  + brand_id [PK]
+  --
+  name
+  logo_url
+}
+
+class categories {
+  + category_id [PK]
+  --
+  name
+  description
+}
+
+class products {
+  + product_id [PK]
+  --
+  name
+  description
+  price
+  stock
+  is_active
+  created_at
+}
+
+class product_specs {
+  + spec_id [PK]
+  --
+  spec_name
+  spec_value
+}
+
+class product_images {
+  + image_id [PK]
+  --
+  image_url
+  is_primary
+}
+
+class cart {
+  + cart_id [PK]
+  --
+  created_at
+  updated_at
+}
+
+class cart_items {
+  + cart_item_id [PK]
+  --
+  quantity
+  added_at
+}
+
+class orders {
+  + order_id [PK]
+  --
+  total
+  status
+  created_at
+}
+
+class order_items {
+  + order_item_id [PK]
+  --
+  quantity
+  price
+}
+
+class reviews {
+  + review_id [PK]
+  --
+  rating
+  comment
+  created_at
+}
+
+' Relaciones
+
+users "1" -- "0..*" cart
+users "1" -- "0..*" orders
+users "1" -- "0..*" reviews
+
+brands "1" -- "1..*" products
+categories "1" -- "1..*" products
+
+products "1" -- "1..*" product_specs
+products "1" -- "1..*" product_images
+products "1" -- "0..*" cart_items
+products "1" -- "0..*" order_items
+products "1" -- "0..*" reviews
+
+cart "1" -- "1..*" cart_items
+
+orders "1" -- "1..*" order_items
+
+' Notas
+note top of products
+  Campos clave:
+  - brand_id [FK → brands]
+  - category_id [FK → categories]
+end note
+
+note right of cart_items
+  Llaves foráneas:
+  - cart_id → cart
+  - product_id → products
+end note
+
+@enduml
