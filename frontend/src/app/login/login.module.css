@@ -1,0 +1,33 @@
+.loginContainer {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.loginCard {
+  animation: slideUp 0.6s ease-out;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blurBackground {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
