@@ -5,24 +5,26 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { ShoppingCartIcon, MagnifyingGlassIcon, UserIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useCart } from '@/lib/CartContext';
 
 const HeaderComponent = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const pathname = usePathname();
-  
-  const navItems = [
+  const { cartCount } = useCart();
+    const navItems = [
     { name: 'Inicio', href: '/' },
-    { name: 'Productos', href: '/productos' },
+    { name: 'Productos', href: '/catalogo' },
     { name: 'Categorías', href: '/categorias' },
     { name: 'Nosotros', href: '/nosotros' },
     { name: 'Contacto', href: '/contacto' },
   ];
-
   const handleSearch = (e) => {
     e.preventDefault();
-    // Aquí implementarás la lógica de búsqueda más adelante
-    console.log('Buscando:', searchQuery);
+    if (searchQuery.trim()) {
+      // Redirigir a la página de catálogo con el término de búsqueda
+      window.location.href = `/catalogo?q=${encodeURIComponent(searchQuery.trim())}`;
+    }
   };
 
   return (    <header className="bg-white shadow-md sticky top-0 z-50">
@@ -42,7 +44,7 @@ const HeaderComponent = () => {
               <input
                 type="text"
                 placeholder="Buscar productos..."
-                className="w-full pl-10 pr-4 py-2 rounded-full border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 text-black rounded-full border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -65,20 +67,24 @@ const HeaderComponent = () => {
                 {item.name}
               </Link>
             ))}
-          </nav>
-
-          {/* Iconos de usuario y carrito */}
+          </nav>          {/* Iconos de usuario y carrito */}
           <div className="flex items-center space-x-4">
-            <Link href="/cuenta" className="p-2 text-gray-700 hover:text-blue-600 transition-colors">
+            <Link href="/cuenta" className="p-2 text-gray-700 hover:text-indigo-600 transition-colors">
               <UserIcon className="h-6 w-6" />
             </Link>
-            <Link 
-              href="/carrito" 
-              className="flex items-center p-2 px-4 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition-colors"
-            >
-              <ShoppingCartIcon className="h-5 w-5 mr-1" />
-              <span className="font-medium">Carrito</span>
-            </Link>
+            {cartCount > 0 ? (
+              <Link 
+                href="/cart" 
+                className="flex items-center p-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors relative group"
+              >
+                <ShoppingCartIcon className="h-5 w-5 mr-1" />
+                <span className="font-medium">Carrito</span>
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                  {cartCount > 9 ? '9+' : cartCount}
+                </span>
+                <span className="absolute inset-0 rounded-md bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+              </Link>
+            ) : null}
 
             {/* Botón de menú móvil */}
             <button

@@ -284,7 +284,7 @@ export default function ProductosPage() {
             <input
               type="text"
               placeholder="Buscar productos..."
-              className="w-full px-4 py-2.5 border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 placeholder-indigo-300"
+              className="w-full px-4 py-2.5 text-black border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 placeholder-indigo-300"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />          </div>
