@@ -40,10 +40,9 @@ const ProductCardComponent = ({ product }) => {
     style: 'currency',
     currency: 'MXN',
   }).format(product?.precio || 0);
-  
-  // Manejar click en el producto
+    // Manejar click en el producto
   const handleProductClick = () => {
-    router.push(`/productos/${product.id}`);
+    router.push(`/archiveproduct?id=${product.id}`);
   };
   
   // Manejar click en añadir al carrito

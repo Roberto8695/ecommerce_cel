@@ -5,6 +5,9 @@ const productosController = require('../controllers/productos.controller');
 // Ruta para obtener todos los productos
 router.get('/', productosController.getAllProductos);
 
+// Ruta para buscar productos
+router.get('/buscar', productosController.buscarProductos);
+
 // Ruta para obtener un producto por ID
 router.get('/:id', productosController.getProductoById);
 

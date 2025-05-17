@@ -239,7 +239,7 @@ export default function CheckoutPage() {
                       id="name"
                       value={formData.name}
                       onChange={handleFormChange}
-                      className={`w-full px-3 py-2 border ${formErrors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
+                      className={`w-full text-black px-3 py-2 border ${formErrors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
                       placeholder="Nombre completo"
                     />
                     {formErrors.name && (
@@ -257,7 +257,7 @@ export default function CheckoutPage() {
                       id="email"
                       value={formData.email}
                       onChange={handleFormChange}
-                      className={`w-full px-3 py-2 border ${formErrors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
+                      className={`w-full text-black px-3 py-2 border ${formErrors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
                       placeholder="correo@ejemplo.com"
                     />
                     {formErrors.email && (
@@ -275,7 +275,7 @@ export default function CheckoutPage() {
                       id="phone"
                       value={formData.phone}
                       onChange={handleFormChange}
-                      className={`w-full px-3 py-2 border ${formErrors.phone ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
+                      className={`w-full text-black px-3 py-2 border ${formErrors.phone ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
                       placeholder="10 dígitos"
                     />
                     {formErrors.phone && (
@@ -293,7 +293,7 @@ export default function CheckoutPage() {
                       id="address"
                       value={formData.address}
                       onChange={handleFormChange}
-                      className={`w-full px-3 py-2 border ${formErrors.address ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
+                      className={`w-full text-black px-3 py-2 border ${formErrors.address ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
                       placeholder="Calle, número, colonia"
                     />
                     {formErrors.address && (
@@ -311,7 +311,7 @@ export default function CheckoutPage() {
                       id="city"
                       value={formData.city}
                       onChange={handleFormChange}
-                      className={`w-full px-3 py-2 border ${formErrors.city ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
+                      className={`w-full text-black px-3 py-2 border ${formErrors.city ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
                       placeholder="Ciudad"
                     />
                     {formErrors.city && (
@@ -329,7 +329,7 @@ export default function CheckoutPage() {
                       id="zipCode"
                       value={formData.zipCode}
                       onChange={handleFormChange}
-                      className={`w-full px-3 py-2 border ${formErrors.zipCode ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
+                      className={`w-full text-black px-3 py-2 border ${formErrors.zipCode ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
                       placeholder="5 dígitos"
                     />
                     {formErrors.zipCode && (
@@ -346,40 +346,18 @@ export default function CheckoutPage() {
                       id="state"
                       value={formData.state}
                       onChange={handleFormChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full text-black px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
-                      <option value="Ciudad de México">Ciudad de México</option>
-                      <option value="Aguascalientes">Aguascalientes</option>
-                      <option value="Baja California">Baja California</option>
-                      <option value="Baja California Sur">Baja California Sur</option>
-                      <option value="Campeche">Campeche</option>
-                      <option value="Chiapas">Chiapas</option>
-                      <option value="Chihuahua">Chihuahua</option>
-                      <option value="Coahuila">Coahuila</option>
-                      <option value="Colima">Colima</option>
-                      <option value="Durango">Durango</option>
-                      <option value="Estado de México">Estado de México</option>
-                      <option value="Guanajuato">Guanajuato</option>
-                      <option value="Guerrero">Guerrero</option>
-                      <option value="Hidalgo">Hidalgo</option>
-                      <option value="Jalisco">Jalisco</option>
-                      <option value="Michoacán">Michoacán</option>
-                      <option value="Morelos">Morelos</option>
-                      <option value="Nayarit">Nayarit</option>
-                      <option value="Nuevo León">Nuevo León</option>
-                      <option value="Oaxaca">Oaxaca</option>
-                      <option value="Puebla">Puebla</option>
-                      <option value="Querétaro">Querétaro</option>
-                      <option value="Quintana Roo">Quintana Roo</option>
-                      <option value="San Luis Potosí">San Luis Potosí</option>
-                      <option value="Sinaloa">Sinaloa</option>
-                      <option value="Sonora">Sonora</option>
-                      <option value="Tabasco">Tabasco</option>
-                      <option value="Tamaulipas">Tamaulipas</option>
-                      <option value="Tlaxcala">Tlaxcala</option>
-                      <option value="Veracruz">Veracruz</option>
-                      <option value="Yucatán">Yucatán</option>
-                      <option value="Zacatecas">Zacatecas</option>
+                      <option value="Cochabamba">Cochabamba</option>
+                      <option value="Santa Cruz">Santa Cruz</option>
+                      <option value="La Paz">La Paz</option>
+                      <option value="Oruro">Oruro</option>
+                      <option value="Potosi">Potosí</option>
+                      <option value="Chuquisaca">Chuquisaca</option>
+                      <option value="Tarija">Tarija</option>
+                      <option value="Pando">Pando</option>
+                      <option value="Beni">Beni</option>
+                      
                     </select>
                   </div>
 

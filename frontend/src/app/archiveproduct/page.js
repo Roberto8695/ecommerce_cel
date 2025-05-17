@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getProductoById } from '../../../services/productosService';
-import ProductImageGallery from '../../../components/ProductImageGallery';
-import ProductRating from '../../../components/ProductRating';
-import ModelSelector from '../../../components/ModelSelector';
-import SimilarProducts from '../../../components/SimilarProducts';
-import { useCart } from '../../../lib/CartContext';
+import { getProductoById } from '../../services/productosService';
+import ProductImageGallery from '../../components/ProductImageGallery';
+import ProductRating from '../../components/ProductRating';
+import ModelSelector from '../../components/ModelSelector';
+import SimilarProducts from '../../components/SimilarProducts';
+import { useCart } from '../../lib/CartContext';
 
-export default function DetalleProductoPage() {
-  const params = useParams();
+export default function ArchiveProductPage() {
+  const searchParams = useSearchParams();
+  const productId = searchParams.get('id');
   const router = useRouter();
   const { addToCart } = useCart();
   const [producto, setProducto] = useState(null);
@@ -24,15 +25,20 @@ export default function DetalleProductoPage() {
   const modeloVariantes = useMemo(() => ['64GB', '128GB', '256GB', '512GB'], []);
   const productRating = 3.5;
   const productReviews = 4;
+
   useEffect(() => {
     const cargarProducto = async () => {
-      if (!params.id) return;
+      if (!productId) {
+        setError('ID de producto no especificado');
+        setCargando(false);
+        return;
+      }
       
       setCargando(true);
       setError(null);
       
       try {
-        const data = await getProductoById(params.id);
+        const data = await getProductoById(productId);
         setProducto(data);
         // Seleccionar el primer modelo por defecto
         if (modeloVariantes.length > 0) {
@@ -47,7 +53,7 @@ export default function DetalleProductoPage() {
     };
 
     cargarProducto();
-  }, [params.id, modeloVariantes]);
+  }, [productId, modeloVariantes]);
 
   const handleVolver = () => {
     router.back();
@@ -169,8 +175,7 @@ export default function DetalleProductoPage() {
                 {producto.marca}
               </span>
             </div>
-            
-            <div className="text-3xl font-bold text-gray-900 mb-4">
+              <div className="text-3xl font-bold text-gray-900 mb-4">
               ${(parseFloat(producto.precio) || 0).toFixed(2)}
             </div>
             

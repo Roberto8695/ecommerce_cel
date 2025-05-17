@@ -1,33 +1,114 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingCartIcon, MagnifyingGlassIcon, UserIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useCart } from '@/lib/CartContext';
+import { buscarProductos } from '@/services/productosService';
 
 const HeaderComponent = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef(null);
   const pathname = usePathname();
+  const router = useRouter();
   const { cartCount } = useCart();
-    const navItems = [
+
+  const navItems = [
     { name: 'Inicio', href: '/' },
     { name: 'Productos', href: '/catalogo' },
     { name: 'Categorías', href: '/categorias' },
     { name: 'Nosotros', href: '/nosotros' },
     { name: 'Contacto', href: '/contacto' },
   ];
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // Redirigir a la página de catálogo con el término de búsqueda
-      window.location.href = `/catalogo?q=${encodeURIComponent(searchQuery.trim())}`;
+
+  // Función para obtener la URL de la imagen correctamente
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    
+    if (image.startsWith('http')) {
+      return image;
+    } else if (image.includes('/uploads/')) {
+      return `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000'}${image}`;
+    } else {
+      return `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000'}/uploads/productos/${image}`;
     }
   };
 
-  return (    <header className="bg-white shadow-md sticky top-0 z-50">
+  // Manejar la búsqueda en tiempo real - usando la misma lógica que el catálogo
+  useEffect(() => {
+    // Función para realizar la búsqueda
+    const searchProducts = async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          console.log('Buscando productos con término:', searchQuery);
+
+          // Usamos la función actualizada que aplica la misma lógica que el catálogo
+          const results = await buscarProductos(searchQuery);
+          console.log('Resultados obtenidos:', results);
+
+          // Limitamos a 5 resultados para el dropdown
+          setSearchResults(results.slice(0, 5));
+          setShowResults(true);
+        } catch (error) {
+          console.error('Error al buscar productos:', error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowResults(false);
+      }
+    };
+
+    // Debounce para evitar múltiples llamadas mientras el usuario escribe
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim().length >= 2) {
+        searchProducts();
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Cerrar resultados cuando se hace click fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Manejar envío del formulario de búsqueda
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setShowResults(false);
+      router.push(`/catalogo?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+  // Manejar clic en un resultado
+  const handleResultClick = (productId) => {
+    setShowResults(false);
+    setSearchQuery('');
+    router.push(`/archiveproduct?id=${productId}`);
+  };
+
+  return (
+    <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -39,7 +120,7 @@ const HeaderComponent = () => {
           </Link>
 
           {/* Buscador en pantallas medianas y grandes */}
-          <div className="hidden md:block flex-grow max-w-md mx-4">
+          <div ref={searchRef} className="hidden md:block flex-grow max-w-md mx-4">
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
@@ -47,10 +128,87 @@ const HeaderComponent = () => {
                 className="w-full pl-10 pr-4 py-2 text-black rounded-full border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchResults.length > 0 && setShowResults(true)}
               />
               <button type="submit" className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <MagnifyingGlassIcon className="h-5 w-5 text-indigo-400" />
+                {isSearching ? (
+                  <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <MagnifyingGlassIcon className="h-5 w-5 text-indigo-400" />
+                )}
               </button>
+
+              {/* Dropdown de resultados de búsqueda */}
+              {showResults && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg overflow-hidden z-50 border border-gray-200">
+                  <ul>
+                    {isSearching ? (
+                      <li className="p-4 text-center">
+                        <div className="flex justify-center">
+                          <div className="h-5 w-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500">Buscando productos...</p>
+                      </li>
+                    ) : searchResults.length > 0 ? (
+                      <>
+                        {searchResults.map(product => (
+                          <li key={product.id || product.id_producto} className="border-b border-gray-100 last:border-none">
+                            <button
+                              onClick={() => handleResultClick(product.id || product.id_producto)}
+                              className="w-full flex items-center p-3 hover:bg-gray-50 transition-colors text-left"
+                            >
+                              <div className="relative h-12 w-12 flex-shrink-0 bg-gray-50 rounded-md overflow-hidden">
+                                {product.imagenes && product.imagenes.length > 0 ? (
+                                  <Image 
+                                    src={getImageUrl(product.imagenes[0])}
+                                    alt={product.nombre || product.modelo || 'Producto'}
+                                    fill
+                                    className="object-contain"
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = '/images/product-placeholder.png';
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="h-full w-full flex items-center justify-center bg-gray-100">
+                                    <span className="text-gray-400 text-xs">Sin imagen</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="ml-3 flex-grow">
+                                <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                                  {product.nombre || product.modelo}
+                                </p>
+                                <p className="text-sm text-indigo-600 font-medium">
+                                  {new Intl.NumberFormat('es-MX', {
+                                    style: 'currency',
+                                    currency: 'MXN',
+                                  }).format(product.precio)}
+                                </p>
+                                {product.marca && product.marca.nombre && (
+                                  <p className="text-xs text-gray-500">{product.marca.nombre}</p>
+                                )}
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                        <li>
+                          <button
+                            onClick={() => handleSearch({ preventDefault: () => {} })}
+                            className="w-full p-2 text-center text-indigo-600 hover:bg-indigo-50 text-sm font-medium"
+                          >
+                            Ver todos los resultados
+                          </button>
+                        </li>
+                      </>
+                    ) : (
+                      <li className="p-4 text-center">
+                        <p className="text-sm text-gray-500">No se encontraron productos</p>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
             </form>
           </div>
 
@@ -67,7 +225,9 @@ const HeaderComponent = () => {
                 {item.name}
               </Link>
             ))}
-          </nav>          {/* Iconos de usuario y carrito */}
+          </nav>
+
+          {/* Iconos de usuario y carrito */}
           <div className="flex items-center space-x-4">
             <Link href="/cuenta" className="p-2 text-gray-700 hover:text-indigo-600 transition-colors">
               <UserIcon className="h-6 w-6" />
@@ -102,7 +262,7 @@ const HeaderComponent = () => {
         </div>
 
         {/* Buscador en móvil */}
-        <div className="mt-4 md:hidden">
+        <div className="mt-4 md:hidden" ref={searchRef}>
           <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
@@ -110,10 +270,87 @@ const HeaderComponent = () => {
               className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => searchResults.length > 0 && setShowResults(true)}
             />
             <button type="submit" className="absolute left-3 top-1/2 transform -translate-y-1/2">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              {isSearching ? (
+                <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              )}
             </button>
+
+            {/* Dropdown de resultados de búsqueda para móvil */}
+            {showResults && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg overflow-hidden z-50 border border-gray-200">
+                <ul>
+                  {isSearching ? (
+                    <li className="p-4 text-center">
+                      <div className="flex justify-center">
+                        <div className="h-5 w-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                      <p className="mt-2 text-sm text-gray-500">Buscando productos...</p>
+                    </li>
+                  ) : searchResults.length > 0 ? (
+                    <>
+                      {searchResults.map(product => (
+                        <li key={product.id || product.id_producto} className="border-b border-gray-100 last:border-none">
+                          <button
+                            onClick={() => handleResultClick(product.id || product.id_producto)}
+                            className="w-full flex items-center p-3 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <div className="relative h-12 w-12 flex-shrink-0 bg-gray-50 rounded-md overflow-hidden">
+                              {product.imagenes && product.imagenes.length > 0 ? (
+                                <Image 
+                                  src={getImageUrl(product.imagenes[0])}
+                                  alt={product.nombre || product.modelo || 'Producto'}
+                                  fill
+                                  className="object-contain"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = '/images/product-placeholder.png';
+                                  }}
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-gray-100">
+                                  <span className="text-gray-400 text-xs">Sin imagen</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="ml-3 flex-grow">
+                              <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                                {product.nombre || product.modelo}
+                              </p>
+                              <p className="text-sm text-indigo-600 font-medium">
+                                {new Intl.NumberFormat('es-MX', {
+                                  style: 'currency',
+                                  currency: 'MXN',
+                                }).format(product.precio)}
+                              </p>
+                              {product.marca && product.marca.nombre && (
+                                <p className="text-xs text-gray-500">{product.marca.nombre}</p>
+                              )}
+                            </div>
+                          </button>
+                        </li>
+                      ))}
+                      <li>
+                        <button
+                          onClick={() => handleSearch({ preventDefault: () => {} })}
+                          className="w-full p-2 text-center text-indigo-600 hover:bg-indigo-50 text-sm font-medium"
+                        >
+                          Ver todos los resultados
+                        </button>
+                      </li>
+                    </>
+                  ) : (
+                    <li className="p-4 text-center">
+                      <p className="text-sm text-gray-500">No se encontraron productos</p>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </form>
         </div>
 

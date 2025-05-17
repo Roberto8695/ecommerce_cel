@@ -46,10 +46,9 @@ export default function CatalogoProductosPage() {
 
     cargarDatos();
   }, []);
-
   // Navegar a la página de detalle del producto
   const irADetalleProducto = (id) => {
-    router.push(`/productos/${id}`);
+    router.push(`/archiveproduct?id=${id}`);
   };
 
   // Filtrar productos
@@ -252,7 +251,7 @@ export default function CatalogoProductosPage() {
                     </h2>
                     <div className="flex justify-between items-center">
                       <p className="text-lg font-bold text-gray-900">
-                        ${producto.precio.toFixed(2)}
+                        ${(parseFloat(producto.precio) || 0).toFixed(2)}
                       </p>
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         producto.stock > 10 ? 'bg-green-100 text-green-800' : 

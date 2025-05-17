@@ -356,7 +356,7 @@ export default function CatalogoPage() {
               <select
                 value={sortBy}
                 onChange={handleSortChange}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                className="w-full text-black px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
               >
                 <option value="relevancia">Ordenar por: Relevancia</option>
                 <option value="precioAsc">Precio: Menor a Mayor</option>

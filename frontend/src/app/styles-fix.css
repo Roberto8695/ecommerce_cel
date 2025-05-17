@@ -1,0 +1,25 @@
+/* Estilos globales simples */
+@import "tailwindcss";
+
+body {
+  background-color: #ffffff !important; /* Forzar fondo blanco */
+  color: #171717;
+  font-family: var(--font-geist-sans, Arial, Helvetica, sans-serif);
+}
+
+/* Clase auxiliar para forzar fondo blanco */
+.bg-white-force {
+  background-color: #ffffff !important;
+}
+
+/* Clase para contenedor principal */
+.main-container {
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+/* Estilo para páginas de producto */
+.product-page-container {
+  background-color: #ffffff;
+  min-height: 100vh;
+}

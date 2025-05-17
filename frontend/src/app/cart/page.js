@@ -147,8 +147,7 @@ export default function CartPage() {
                       <div className="ml-4 flex flex-1 flex-col">
                         <div>
                           <div className="flex justify-between text-base font-medium text-gray-800">
-                            <h3>
-                              <Link href={`/productos/${item.id}`} className="hover:text-indigo-600">
+                            <h3>                              <Link href={`/archiveproduct?id=${item.id}`} className="hover:text-indigo-600">
                                 {item.nombre}
                               </Link>
                             </h3>
@@ -168,7 +167,7 @@ export default function CartPage() {
                             >
                               <MinusIcon className="h-4 w-4" />
                             </button>
-                            <span className="px-4 py-1 border-x border-gray-200 min-w-[40px] text-center">
+                            <span className="px-4 py-1 text-black border-x border-gray-200 min-w-[40px] text-center">
                               {item.quantity}
                             </span>
                             <button 
