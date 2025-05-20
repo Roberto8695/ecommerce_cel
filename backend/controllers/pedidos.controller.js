@@ -324,10 +324,14 @@ const getPedidoById = async (req, res) => {  try {
     
     const productosResult = await db.query(productosQuery, [id]);
     pedido.productos = productosResult.rows;
-    
-    // Si hay comprobante, añadir la URL completa
+      // Si hay comprobante, añadir la URL completa
     if (pedido.url_comprobante) {
-      pedido.url_comprobante_completa = `${process.env.API_URL || 'http://localhost:5000'}${pedido.url_comprobante}`;
+      // Asegurarse de que la URL tenga el formato correcto
+      const apiUrl = process.env.API_URL || 'http://localhost:5000';
+      // Verificar si la url_comprobante ya comienza con /
+      const separator = pedido.url_comprobante.startsWith('/') ? '' : '/';
+      pedido.url_comprobante_completa = `${apiUrl}${separator}${pedido.url_comprobante}`;
+      console.log(`URL completa del comprobante generada: ${pedido.url_comprobante_completa}`);
     }
     
     res.json({

@@ -235,12 +235,21 @@ export default function VentasPage() {
       setLoading(false);
     }
   };
-
   // Ver comprobante
   const verComprobante = (url) => {
+    // Asegurarnos de que la URL del comprobante es completa
+    let urlCompleta = url;
+    
+    // Si la URL no comienza con http o https, añadir el prefijo del API
+    if (url && !url.startsWith('http')) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      urlCompleta = `${apiUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+      console.log('URL de comprobante completada:', urlCompleta);
+    }
+    
     setModalComprobante({
       isOpen: true,
-      urlComprobante: url
+      urlComprobante: urlCompleta
     });
   };
 
@@ -299,17 +308,19 @@ export default function VentasPage() {
           </span>
         );
       }
-    },
-    {
+    },    {
       header: 'Comprobante',
       accessorKey: 'url_comprobante',
       cell: (info) => {
         const urlComprobante = info.getValue();
+        // Si hay url_comprobante_completa, usarla; si no, usar url_comprobante
+        const urlToUse = info.row.original.url_comprobante_completa || urlComprobante;
         
         return urlComprobante ? (
           <button 
-            onClick={() => verComprobante(info.row.original.url_comprobante_completa)} 
+            onClick={() => verComprobante(urlToUse)} 
             className="text-blue-600 hover:text-blue-800"
+            title="Ver comprobante de pago"
           >
             <FaFileInvoiceDollar className="text-lg" />
           </button>
@@ -566,14 +577,22 @@ export default function VentasPage() {
                   </table>
                 </div>
               </div>
-              
-              {/* Comprobante */}
+                {/* Comprobante */}
               {modalDetalle.pedido.url_comprobante && (
                 <div className="mb-6">
                   <h4 className="font-medium text-gray-900 mb-4">Comprobante de Pago</h4>
                   <div className="border rounded-lg p-2">
                     <button
-                      onClick={() => verComprobante(modalDetalle.pedido.url_comprobante_completa)}
+                      onClick={() => {
+                        // Usar url_comprobante_completa si existe, o generar la URL completa si no
+                        const urlToUse = modalDetalle.pedido.url_comprobante_completa || 
+                          ((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + 
+                          (modalDetalle.pedido.url_comprobante.startsWith('/') ? '' : '/') + 
+                          modalDetalle.pedido.url_comprobante);
+                        
+                        console.log('Abriendo comprobante:', urlToUse);
+                        verComprobante(urlToUse);
+                      }}
                       className="bg-blue-50 text-blue-600 p-2 rounded hover:bg-blue-100 flex items-center"
                     >
                       <FaFileInvoiceDollar className="mr-2" />
@@ -626,21 +645,24 @@ export default function VentasPage() {
               >
                 &times;
               </button>
-            </div>
-              <div className="p-6 flex justify-center">
+            </div>              <div className="p-6 flex justify-center">
               {modalComprobante.urlComprobante && (
                 <div className="max-w-full max-h-[70vh] overflow-auto">
-                  <Image
-                    src={modalComprobante.urlComprobante}
-                    alt="Comprobante de pago"
-                    width={600}
-                    height={800}
-                    style={{ objectFit: 'contain' }}
-                    onError={(e) => {
-                      console.error('Error al cargar la imagen del comprobante');
-                      e.target.src = '/img/placeholder-product.png'; // Imagen de respaldo
-                    }}
-                  />
+                  <div className="relative">
+                    <Image
+                      src={modalComprobante.urlComprobante}
+                      alt="Comprobante de pago"
+                      width={600}
+                      height={800}
+                      style={{ objectFit: 'contain' }}
+                      onError={(e) => {
+                        console.error('Error al cargar la imagen del comprobante:', modalComprobante.urlComprobante);
+                        e.target.src = '/img/placeholder-product.png'; // Imagen de respaldo
+                      }}
+                      unoptimized // Esto evita que Next.js intente optimizar la imagen, lo que puede causar problemas con URLs externas
+                    />
+                  </div>
+                  <p className="text-center text-xs mt-2 text-gray-500">URL: {modalComprobante.urlComprobante}</p>
                 </div>
               )}
             </div>
