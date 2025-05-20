@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'react-hot-toast';
-import { ArrowLeftIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, CheckCircleIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
+import FileUpload from '@/components/FileUpload';
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -31,6 +32,10 @@ export default function CheckoutPage() {
   });
   
   const [formErrors, setFormErrors] = useState({});
+  
+  // Estado para el comprobante de pago
+  const [comprobante, setComprobante] = useState(null);
+  const [comprobanteError, setComprobanteError] = useState('');
 
   // Calcular el envío (gratis por encima de $10,000, de lo contrario $150)
   const shippingCost = cartTotal > 10000 ? 0 : 150;
@@ -71,7 +76,7 @@ export default function CheckoutPage() {
   const validateForm = () => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[0-9]{10}$/;
+    const phoneRegex = /^[0-9]{8}$/;
     const zipCodeRegex = /^[0-9]{5}$/;
 
     if (!formData.name.trim()) errors.name = 'El nombre es obligatorio';
@@ -79,7 +84,7 @@ export default function CheckoutPage() {
     else if (!emailRegex.test(formData.email)) errors.email = 'Email inválido';
     
     if (!formData.phone.trim()) errors.phone = 'El teléfono es obligatorio';
-    else if (!phoneRegex.test(formData.phone)) errors.phone = 'Teléfono inválido (10 dígitos)';
+    else if (!phoneRegex.test(formData.phone)) errors.phone = 'Teléfono inválido (8 dígitos)';
     
     if (!formData.address.trim()) errors.address = 'La dirección es obligatoria';
     if (!formData.city.trim()) errors.city = 'La ciudad es obligatoria';
@@ -90,38 +95,103 @@ export default function CheckoutPage() {
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
-
   // Ir al siguiente paso
-  const goToNextStep = () => {
+  const goToNextStep = async () => {
     if (currentStep === 1) {
       if (!validateForm()) return;
-    }
-    
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
       
-      if (currentStep === 1) {
-        // Generar QR de pago ficticio para el paso de pago
-        generateQRCode();
-        startCountdown();
-        setCurrentStep(2);
-      } else if (currentStep === 2) {
-        // Simular confirmación de pago
-        completeOrder();
+      setIsLoading(true);
+        try {
+        // Crear el pedido en la base de datos
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        
+        // Preparar los datos del pedido
+        const pedidoData = {
+          id_cliente: 1, // En un sistema real, aquí iría el ID del cliente autenticado
+          total: totalWithShipping,
+          metodo_pago: formData.paymentMethod,
+          productos: cartItems.map(item => ({
+            id_producto: item.id,
+            cantidad: item.quantity,
+            precio_unitario: item.precio,
+            subtotal: item.precio * item.quantity
+          }))
+        };
+        
+        console.log('Enviando datos de pedido:', JSON.stringify(pedidoData, null, 2));
+        
+        // Notificar al usuario
+        toast.loading('Procesando pedido...', {
+          position: 'bottom-right',
+          id: 'creating-order'
+        });
+        
+        // Enviar solicitud para crear el pedido
+        const response = await fetch(`${API_URL}/pedidos`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(pedidoData)
+        });
+        
+        toast.dismiss('creating-order');
+        
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          console.error('Error al parsear la respuesta JSON:', parseError);
+          throw new Error('Error al procesar la respuesta del servidor');
+        }
+        
+        if (!response.ok) {
+          console.error('Error en la respuesta del servidor:', data);
+          throw new Error(data.message || data.error || 'Error al crear el pedido');
+        }
+        
+        // Guardar el ID del pedido
+        const pedidoId = data.data.id_pedido;
+        
+        // Avanzar al paso de pago
+        if (formData.paymentMethod === 'qr') {
+          // Generar QR y mostrar cuenta regresiva
+          generateQRCode(pedidoId);
+          startCountdown();
+          setCurrentStep(2);
+        } else if (formData.paymentMethod === 'tarjeta') {
+          // Para tarjeta, ir directamente a confirmación ya que se considera pagado
+          setOrderID(pedidoId);
+          setCurrentStep(3);
+          clearCart();
+          toast.success('¡Compra realizada con éxito!');
+        } else {
+          // Para transferencia, mostrar los datos bancarios
+          setOrderID(pedidoId);
+          setCurrentStep(2);
+        }
+        
+      } catch (error) {
+        console.error('Error al crear pedido:', error);
+        toast.error(`Error: ${error.message || 'No se pudo crear el pedido'}`, {
+          position: 'bottom-right',
+          duration: 4000
+        });
+      } finally {
+        setIsLoading(false);
       }
-    }, 1000);
+    } else if (currentStep === 2) {
+      // En el paso 2, procesamos el comprobante de pago
+      completeOrder();
+    }
   };
-
   // Generar código QR
-  const generateQRCode = () => {
-    // Simulación: generamos un ID de orden aleatorio para el QR
-    const newOrderID = `ORD-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
-    setOrderID(newOrderID);
+  const generateQRCode = (pedidoId) => {
+    // Usar el ID del pedido real que recibimos del backend
+    setOrderID(pedidoId);
     
-    // En un caso real, aquí integrarías con la pasarela de pagos para generar el QR
-    // Por ahora usaremos un servicio gratuito para generar QRs
-    const qrData = `https://ecommercecelmx.com/pago/${newOrderID}?amount=${totalWithShipping.toFixed(2)}&concept=Compra en ECommerce Cel`;
+    // Generar QR con los datos del pedido
+    const qrData = `https://ecommercecelmx.com/pago/${pedidoId}?amount=${totalWithShipping.toFixed(2)}&concept=Compra en ECommerce Cel`;
     setQrImage(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`);
   };
 
@@ -143,25 +213,105 @@ export default function CheckoutPage() {
     const minutes = Math.floor(countdown / 60);
     const seconds = countdown % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
-  // Completar la orden
-  const completeOrder = () => {
-    // Simulación: completar la orden después de confirmar pago
-    clearInterval(countdownIntervalRef.current);
-    setCurrentStep(3);
-    
-    // Limpiar carrito
-    clearCart();
-    
-    // Mostrar notificación de éxito
-    toast.success('¡Compra realizada con éxito!', {
-      position: 'bottom-right',
-      duration: 4000,
-      style: {
-        background: '#10B981',
-        color: '#ffffff'
+  };  // Completar la orden
+  const completeOrder = async () => {
+    try {
+      // Verificar que existe un comprobante para transferencia o para QR
+      if (!comprobante && (formData.paymentMethod === 'transferencia' || formData.paymentMethod === 'qr')) {
+        setComprobanteError('Por favor, suba un comprobante de pago');
+        return;
       }
-    });
+      
+      // Enviar el comprobante al servidor
+      if (comprobante && (formData.paymentMethod === 'transferencia' || formData.paymentMethod === 'qr')) {
+        // Crear un FormData para enviar el archivo
+        const formDataToSend = new FormData();
+        formDataToSend.append('comprobante', comprobante);
+        
+        try {          
+          // Obtener la URL base desde las variables de entorno o usar el valor predeterminado
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+          
+          console.log(`Subiendo comprobante para el pedido ${orderID}:`, comprobante.name);
+          
+          // Mostrar notificación de carga
+          toast.loading('Subiendo comprobante...', {
+            position: 'bottom-right',
+            id: 'uploading-toast'
+          });
+          
+          // Usar la nueva ruta de pedidos para subir el comprobante
+          const response = await fetch(`${API_URL}/pedidos/${orderID}/comprobante`, {
+            method: 'POST',
+            body: formDataToSend
+          });
+          
+          // Cerrar notificación de carga
+          toast.dismiss('uploading-toast');
+          
+          let data;
+          try {
+            data = await response.json();
+          } catch (parseError) {
+            console.error('Error al parsear la respuesta JSON:', parseError);
+            throw new Error('Error al procesar la respuesta del servidor');
+          }
+          
+          if (!response.ok) {
+            console.error('Error en la respuesta del servidor:', data);
+            throw new Error(data.message || data.error || 'Error al subir el comprobante');
+          }
+          
+          console.log('Comprobante subido con éxito:', data);
+          
+          // Mostrar notificación de éxito
+          toast.success('Comprobante subido correctamente', {
+            position: 'bottom-right',
+            duration: 4000
+          });
+        } catch (error) {
+          console.error('Error al subir el comprobante:', error);
+          
+          // Mostrar notificación de error
+          toast.error(`Error: ${error.message || 'No se pudo subir el comprobante'}`, {
+            position: 'bottom-right',
+            duration: 4000
+          });
+          
+          if (!process.env.NEXT_PUBLIC_DEMO_MODE) {
+            // En una aplicación real, detenemos el proceso aquí si hay un error
+            return;
+          }
+          // En modo demo continuamos para mostrar el flujo completo
+        }
+      }
+      
+      // Detener cuenta regresiva
+      clearInterval(countdownIntervalRef.current);
+      
+      // Avanzar al paso de confirmación
+      setCurrentStep(3);
+      
+      // Limpiar carrito
+      clearCart();
+      
+      // Mostrar notificación de éxito
+      toast.success('¡Compra realizada con éxito!', {
+        position: 'bottom-right',
+        duration: 4000,
+        style: {
+          background: '#10B981',
+          color: '#ffffff'
+        }
+      });
+    } catch (error) {
+      console.error('Error al procesar el pago:', error);
+      
+      toast.error('Error al procesar el pago. Inténtalo de nuevo.', {
+        position: 'bottom-right',
+        duration: 4000
+      });
+    }
   };
 
   // Limpiar intervalo cuando el componente se desmonte
@@ -276,7 +426,7 @@ export default function CheckoutPage() {
                       value={formData.phone}
                       onChange={handleFormChange}
                       className={`w-full text-black px-3 py-2 border ${formErrors.phone ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} rounded-md focus:outline-none focus:ring-2`}
-                      placeholder="10 dígitos"
+                      placeholder="8 dígitos"
                     />
                     {formErrors.phone && (
                       <p className="mt-1 text-sm text-red-600">{formErrors.phone}</p>
@@ -362,25 +512,46 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="col-span-2">
-                    <h3 className="text-md font-medium text-gray-900 mb-3">Método de pago</h3>
-                    <div className="border border-indigo-200 rounded-lg p-4 bg-indigo-50">
-                      <div className="flex items-center">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          id="qr"
-                          value="qr"
-                          checked={formData.paymentMethod === 'qr'}
-                          onChange={handleFormChange}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                        />
-                        <label htmlFor="qr" className="ml-3 block text-sm font-medium text-gray-700 cursor-pointer">
-                          Pago con QR
-                        </label>
+                    <h3 className="text-md font-medium text-gray-900 mb-3">Método de pago</h3>                    <div className="space-y-4">
+                      <div className="border border-indigo-200 rounded-lg p-4 bg-indigo-50">
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            id="qr"
+                            value="qr"
+                            checked={formData.paymentMethod === 'qr'}
+                            onChange={handleFormChange}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                          />
+                          <label htmlFor="qr" className="ml-3 block text-sm font-medium text-gray-700 cursor-pointer">
+                            Pago con QR
+                          </label>
+                        </div>
+                        <p className="mt-2 text-xs text-gray-500 ml-7">
+                          Paga utilizando un código QR que podrás escanear con la app de tu banco
+                        </p>
                       </div>
-                      <p className="mt-2 text-xs text-gray-500 ml-7">
-                        Paga utilizando un código QR que podrás escanear con la app de tu banco
-                      </p>
+                      
+                      <div className="border border-indigo-200 rounded-lg p-4 bg-indigo-50">
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            id="transferencia"
+                            value="transferencia"
+                            checked={formData.paymentMethod === 'transferencia'}
+                            onChange={handleFormChange}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                          />
+                          <label htmlFor="transferencia" className="ml-3 block text-sm font-medium text-gray-700 cursor-pointer">
+                            Transferencia bancaria
+                          </label>
+                        </div>
+                        <p className="mt-2 text-xs text-gray-500 ml-7">
+                          Realiza una transferencia desde tu banca en línea y sube tu comprobante de pago
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -438,49 +609,140 @@ export default function CheckoutPage() {
               </div>
             </div>
           </div>
-        )}
-
-        {/* Paso 2: Pago con QR */}
+        )}        {/* Paso 2: Pago */}
         {currentStep === 2 && (
           <div className="max-w-xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Escanea para pagar</h2>
-              <p className="text-gray-600 mb-6">
-                Usa la app de tu banco para escanear el código QR y completar tu pago
-              </p>
+            <div className="bg-white rounded-lg shadow-sm p-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">
+                {formData.paymentMethod === 'qr' ? 'Escanea para pagar' : 'Realiza tu transferencia'}
+              </h2>
               
-              {qrImage && (
-                <div className="mb-6 flex justify-center">
-                  <div className="border-4 border-indigo-100 p-4 rounded-lg">
-                    <Image 
-                      src={qrImage}
-                      alt="Código QR para pago" 
-                      width={200} 
-                      height={200}
-                      className="mx-auto"
+              {formData.paymentMethod === 'qr' && (
+                <>
+                  <p className="text-gray-600 mb-6 text-center">
+                    Usa la app de tu banco para escanear el código QR y completar tu pago
+                  </p>
+                  
+                  {qrImage && (
+                    <div className="mb-6 flex justify-center">
+                      <div className="border-4 border-indigo-100 p-4 rounded-lg">
+                        <Image 
+                          src={qrImage}
+                          alt="Código QR para pago" 
+                          width={200} 
+                          height={200}
+                          className="mx-auto"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {formData.paymentMethod === 'transferencia' && (
+                <div className="mb-6">
+                  <p className="text-gray-600 mb-4 text-center">
+                    Realiza una transferencia a la siguiente cuenta bancaria:
+                  </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <p className="text-sm mb-2"><span className="font-semibold">Banco:</span> BBVA</p>
+                    <p className="text-sm mb-2"><span className="font-semibold">Titular:</span> Ecommerce Cel SA de CV</p>
+                    <p className="text-sm mb-2"><span className="font-semibold">CLABE:</span> 0123 4567 8901 2345 67</p>
+                    <p className="text-sm mb-2"><span className="font-semibold">Cuenta:</span> 01234567890</p>
+                    <p className="text-sm"><span className="font-semibold">Concepto:</span> Pedido #{orderID}</p>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sube tu comprobante de pago
+                    </label>
+                    <FileUpload
+                      onChange={(files) => {
+                        if (files && files.length > 0) {
+                          setComprobante(files[0]);
+                          setComprobanteError('');
+                        }
+                      }}
+                      maxFiles={1}
+                      maxSizeMB={5}
+                      allowedTypes={['image/jpeg', 'image/png', 'application/pdf']}
+                      multiple={false}
+                      showPreviews={true}
                     />
+                    {comprobanteError && (
+                      <p className="mt-1 text-sm text-red-600">{comprobanteError}</p>
+                    )}
                   </div>
                 </div>
               )}
               
               <div className="mb-8">
-                <p className="text-gray-600 mb-1">Orden #: <span className="font-semibold">{orderID}</span></p>
-                <p className="text-gray-600 mb-1">Total a pagar: <span className="font-semibold">{formatPrice(totalWithShipping)}</span></p>
-                <p className="text-gray-600">Tiempo restante: <span className={`font-semibold ${countdown < 60 ? 'text-red-500' : ''}`}>{formatCountdown()}</span></p>
+                <p className="text-gray-600 mb-1 text-center">Orden #: <span className="font-semibold">{orderID}</span></p>
+                <p className="text-gray-600 mb-1 text-center">Total a pagar: <span className="font-semibold">{formatPrice(totalWithShipping)}</span></p>
+                <p className="text-gray-600 text-center">Tiempo restante: <span className={`font-semibold ${countdown < 60 ? 'text-red-500' : ''}`}>{formatCountdown()}</span></p>
               </div>
               
               <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-6">
                 <p className="text-yellow-800 text-sm">
-                  <span className="font-semibold">Importante:</span> Este QR expirará en 15 minutos. Para esta demo, puedes simular que ya completaste el pago.
+                  <span className="font-semibold">Importante:</span> Este pago expirará en 15 minutos. Para esta demo, puedes simular que ya completaste el pago.
                 </p>
               </div>
               
-              <button
-                onClick={goToNextStep}
-                className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
-              >
-                Ya realicé mi pago
-              </button>
+        {!comprobante ? (
+                <button
+                  onClick={() => document.getElementById('comprobante-qr').click()}
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <CloudArrowUpIcon className="h-5 w-5" />
+                  Subir comprobante de pago
+                </button>
+              ) : (
+                <button
+                  onClick={completeOrder}
+                  className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                >
+                  Confirmar pago y finalizar
+                </button>
+              )}
+              
+              <input
+                id="comprobante-qr"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setComprobante(e.target.files[0]);
+                    setComprobanteError('');
+                  }
+                }}
+              />
+              
+              {comprobante && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-800">
+                        Comprobante cargado: {comprobante.name}
+                      </p>
+                    </div>
+                    <button 
+                      type="button"
+                      className="ml-auto text-sm text-red-600 hover:text-red-800"
+                      onClick={() => setComprobante(null)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {comprobanteError && (
+                <p className="mt-2 text-sm text-red-600">{comprobanteError}</p>
+              )}
             </div>
           </div>
         )}

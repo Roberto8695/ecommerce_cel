@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { getProductoById } from '../../../services/productosService';
 import ProductImageGallery from '../../../components/ProductImageGallery';
-import ProductRating from '../../../components/ProductRating';
+
 import ModelSelector from '../../../components/ModelSelector';
 import SimilarProducts from '../../../components/SimilarProducts';
 import { useCart } from '../../../lib/CartContext';
@@ -159,10 +159,7 @@ export default function DetalleProductoPage() {
           <div className="md:col-span-1 flex flex-col">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">{producto.modelo}</h1>
             
-            {/* Sección de valoraciones */}
-            <div className="mb-4">
-              <ProductRating rating={productRating} reviewCount={productReviews} />
-            </div>
+            
             
             <div className="mb-4">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
