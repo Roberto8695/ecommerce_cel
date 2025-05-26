@@ -9,8 +9,7 @@ import { toast } from 'react-hot-toast';
 import { ArrowLeftIcon, CheckCircleIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import FileUpload from '@/components/FileUpload';
 
-export default function CheckoutPage() {
-  const { cartItems, cartTotal, clearCart } = useCart();
+export default function CheckoutPage() {  const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(1); // 1: Datos, 2: Pago, 3: Confirmación
@@ -18,6 +17,7 @@ export default function CheckoutPage() {
   const [qrImage, setQrImage] = useState(null);
   const [countdown, setCountdown] = useState(900); // 15 minutos en segundos
   const countdownIntervalRef = useRef(null);
+  const [finalTotal, setFinalTotal] = useState(0); // Guardar el monto total para la confirmación
 
   // Estados para formulario
   const [formData, setFormData] = useState({
@@ -27,7 +27,7 @@ export default function CheckoutPage() {
     address: '',
     city: '',
     zipCode: '',
-    state: 'Ciudad de México',
+    state: 'Bolivia',
     paymentMethod: 'qr'
   });
   
@@ -158,14 +158,22 @@ export default function CheckoutPage() {
           // Generar QR y mostrar cuenta regresiva
           generateQRCode(pedidoId);
           startCountdown();
-          setCurrentStep(2);
-        } else if (formData.paymentMethod === 'tarjeta') {
-          // Para tarjeta, ir directamente a confirmación ya que se considera pagado
+          setCurrentStep(2);        } else if (formData.paymentMethod === 'tarjeta') {
+          // Para tarjeta, ir directamente a la página de agradecimiento ya que se considera pagado
           setOrderID(pedidoId);
-          setCurrentStep(3);
+          setFinalTotal(totalWithShipping); // Guardar el total final
+          
+          // Preparar datos para pasar a la página de agradecimiento
+          const itemsParam = encodeURIComponent(JSON.stringify(cartItems));
+          
+          // Limpiar carrito
           clearCart();
+          
           toast.success('¡Compra realizada con éxito!');
-        } else {
+          
+          // Redireccionar a la página de agradecimiento
+          router.push(`/tankyou?orderID=${pedidoId}&total=${totalWithShipping}&email=${formData.email}&items=${itemsParam}&date=${new Date().toISOString()}`);
+        }else {
           // Para transferencia, mostrar los datos bancarios
           setOrderID(pedidoId);
           setCurrentStep(2);
@@ -284,13 +292,14 @@ export default function CheckoutPage() {
           }
           // En modo demo continuamos para mostrar el flujo completo
         }
-      }
-      
-      // Detener cuenta regresiva
+      }      // Detener cuenta regresiva
       clearInterval(countdownIntervalRef.current);
       
-      // Avanzar al paso de confirmación
-      setCurrentStep(3);
+      // Guardar el total final para la página de confirmación
+      setFinalTotal(totalWithShipping);
+      
+      // Preparar datos para pasar a la página de agradecimiento
+      const itemsParam = encodeURIComponent(JSON.stringify(cartItems));
       
       // Limpiar carrito
       clearCart();
@@ -298,12 +307,15 @@ export default function CheckoutPage() {
       // Mostrar notificación de éxito
       toast.success('¡Compra realizada con éxito!', {
         position: 'bottom-right',
-        duration: 4000,
+        duration: 3000,
         style: {
           background: '#10B981',
           color: '#ffffff'
         }
       });
+      
+      // Redireccionar a la página de agradecimiento
+      router.push(`/tankyou?orderID=${orderID}&total=${totalWithShipping}&email=${formData.email}&items=${itemsParam}&date=${new Date().toISOString()}`);
     } catch (error) {
       console.error('Error al procesar el pago:', error);
       
@@ -739,45 +751,9 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )}
-              
-              {comprobanteError && (
+                {comprobanteError && (
                 <p className="mt-2 text-sm text-red-600">{comprobanteError}</p>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* Paso 3: Confirmación de compra */}
-        {currentStep === 3 && (
-          <div className="max-w-xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <div className="rounded-full bg-green-100 p-4 w-20 h-20 flex items-center justify-center mx-auto mb-6">
-                <CheckCircleIcon className="h-12 w-12 text-green-600" />
-              </div>
-              
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">¡Gracias por tu compra!</h2>
-              <p className="text-gray-600 mb-6">
-                Tu pedido ha sido recibido y está siendo procesado.
-              </p>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-                <p className="text-gray-600 mb-1">Número de orden: <span className="font-semibold">{orderID}</span></p>
-                <p className="text-gray-600 mb-1">Total pagado: <span className="font-semibold">{formatPrice(totalWithShipping)}</span></p>
-                <p className="text-gray-600">Fecha: <span className="font-semibold">{new Date().toLocaleDateString('es-MX')}</span></p>
-              </div>
-              
-              <p className="text-gray-600 mb-8">
-                Recibirás un email con los detalles de tu compra en: <span className="font-semibold">{formData.email}</span>
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link 
-                  href="/"
-                  className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors text-center"
-                >
-                  Volver a la tienda
-                </Link>
-              </div>
             </div>
           </div>
         )}

@@ -347,18 +347,15 @@ export default function ProductosPage() {
               </svg>
               <p className="mt-3 text-indigo-500 font-medium">No se encontraron productos en stock</p>
             </div>
-          ) : (
-            <table className="min-w-full divide-y divide-indigo-100">
-              <thead className="bg-indigo-50">
-                <tr>
+          ) : (            <table className="min-w-full divide-y divide-indigo-100">
+              <thead className="bg-indigo-50"><tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider">Imagen</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider">Producto</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider">Marca</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider">Precio</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider">Stock</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-800 uppercase tracking-wider">Acciones</th>
-                </tr>
-              </thead>              <tbody className="bg-white divide-y divide-indigo-100">
+                </tr></thead><tbody className="bg-white divide-y divide-indigo-100">
                 {productosPaginados.map((producto, index) => (
                   <tr key={producto.id_producto} className={`hover:bg-indigo-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-indigo-50/30'}`}>
                     <td className="px-6 py-5 whitespace-nowrap">
@@ -398,8 +395,7 @@ export default function ProductosPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-3">
-                        <button 
-                          onClick={() => abrirModalEditar(producto)}
+                        <button                          onClick={() => abrirModalEditar(producto)}
                           className="text-blue-600 hover:text-blue-900 flex items-center"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-1">

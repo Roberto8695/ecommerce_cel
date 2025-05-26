@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from './login.module.css';
+import './modal.css'; // Importamos los estilos del modal
 import { loginAdmin, setAuthData } from '@/services/authService';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -14,10 +15,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successUser, setSuccessUser] = useState('');
   const router = useRouter();
   const { setAdmin, isAuthenticated } = useAuth();
   const searchParams = useSearchParams();
-
   // Verificar si hay algún mensaje desde la redirección
   useEffect(() => {
     const from = searchParams.get('from');
@@ -51,9 +53,16 @@ export default function LoginPage() {
       // Actualizamos el estado global
       setAdmin(data.admin);
       
-      // Redirigimos al dashboard o a la página anterior
-      const from = searchParams.get('from') || '/dashboard';
-      router.push(from);
+      // Mostramos el modal de éxito antes de redirigir
+      setSuccessUser(data.admin?.nombre || email);
+      setShowSuccessModal(true);
+      
+      // Esperamos 2 segundos antes de redirigir
+      setTimeout(() => {
+        // Redirigimos al dashboard o a la página anterior
+        const from = searchParams.get('from') || '/dashboard';
+        router.push(from);
+      }, 2000);
     } catch (err) {
       setError(err.message || 'Credenciales incorrectas. Por favor intenta de nuevo.');
       console.error('Error de login:', err);
@@ -185,15 +194,40 @@ export default function LoginPage() {
               Volver a la tienda
             </Link>
           </p>
-        </div>
-
-        {/* Pie de página */}
+        </div>        {/* Pie de página */}
         <div className="mt-10 pt-4 border-t border-white/20 text-center">
           <p className="text-xs text-blue-100/70">
             © {new Date().getFullYear()} ECommerce Cel. Todos los derechos reservados.
           </p>
         </div>
-      </div>
+      </div>      
+      {/* Modal de inicio de sesión exitoso */}
+      {showSuccessModal && (
+        <div className="login-success-modal">
+          <div className="login-success-modal-backdrop"></div>
+          <div className="login-success-modal-content">
+            <div className="text-center">
+              <div className="login-success-modal-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">¡Inicio de sesión exitoso!</h3>
+              <p className="text-blue-100 mb-6">
+                Bienvenido/a de nuevo, <span className="font-semibold">{successUser}</span>
+              </p>
+              <p className="text-blue-100 text-sm mb-4">
+                Serás redirigido al panel de administración en unos segundos...
+              </p>
+              <div className="flex justify-center">
+                <div className="login-success-modal-loader">
+                  <div className="login-success-modal-loader-bar"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

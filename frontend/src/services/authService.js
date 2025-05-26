@@ -42,21 +42,38 @@ export const getProfile = async () => {
     throw new Error('No hay token de autenticación');
   }
   
-  const response = await fetch(`${API_URL}/api/admin/profile`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  try {
+    const response = await fetch(`${API_URL}/api/admin/profile`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!response.ok) {
-    // Si la respuesta no es exitosa, parseamos el error
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Error al obtener el perfil');
+    if (!response.ok) {
+      // Si recibimos un error 401 o 403, limpiamos la sesión
+      if (response.status === 401 || response.status === 403) {
+        logout();
+        throw new Error('No autorizado. Token inválido o expirado');
+      }
+      
+      // Para otros errores, intentamos parsear el mensaje
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Error al obtener el perfil');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error en getProfile:', error);
+    
+    // Si es un error de red, personalizar el mensaje
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error('No se pudo conectar al servidor. Verifica tu conexión.');
+    }
+    
+    throw error;
   }
-
-  return response.json();
 };
 
 /**
@@ -69,8 +86,27 @@ export const isAuthenticated = () => {
   const token = localStorage.getItem('token');
   if (!token) return false;
 
-  // Aquí podrías añadir verificación del token (exp date)
-  return true;
+  // Verificación básica de token JWT (que tenga formato válido)
+  try {
+    // Dividir el token en sus partes
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    
+    // Verificar que la segunda parte (payload) es un JSON válido
+    const payload = JSON.parse(atob(parts[1]));
+    
+    // Verificar si el token ha expirado
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      // Token expirado, eliminarlo
+      logout();
+      return false;
+    }
+    
+    return true;
+  } catch (e) {
+    console.error('Error al verificar token:', e);
+    return false;
+  }
 };
 
 /**

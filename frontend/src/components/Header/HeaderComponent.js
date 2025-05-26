@@ -22,9 +22,8 @@ const HeaderComponent = () => {
   const navItems = [
     { name: 'Inicio', href: '/' },
     { name: 'Productos', href: '/catalogo' },
-    { name: 'Categorías', href: '/categorias' },
-    { name: 'Nosotros', href: '/nosotros' },
-    { name: 'Contacto', href: '/contacto' },
+    { name: 'Marcas', href: '#marcas' },
+    
   ];
 
   // Función para obtener la URL de la imagen correctamente
@@ -229,9 +228,7 @@ const HeaderComponent = () => {
 
           {/* Iconos de usuario y carrito */}
           <div className="flex items-center space-x-4">
-            <Link href="/cuenta" className="p-2 text-gray-700 hover:text-indigo-600 transition-colors">
-              <UserIcon className="h-6 w-6" />
-            </Link>
+            
             {cartCount > 0 ? (
               <Link 
                 href="/cart" 

@@ -245,22 +245,7 @@ export default function CartPage() {
                       Seguir comprando
                     </Link>
                   </div>
-                </div>                <div className="p-6 bg-gray-50 border-t border-gray-200">
-                  <div className="flex items-center justify-center space-x-4">
-                    <div className="relative h-8 w-12">
-                      <Image src="/img/visa.svg" alt="Visa" fill className="object-contain" />
-                    </div>
-                    <div className="relative h-8 w-12">
-                      <Image src="/img/mastercard.svg" alt="MasterCard" fill className="object-contain" />
-                    </div>
-                    <div className="relative h-8 w-12">
-                      <Image src="/img/paypal.svg" alt="PayPal" fill className="object-contain" />
-                    </div>
-                    <div className="relative h-8 w-12">
-                      <Image src="/img/mercadopago.svg" alt="Mercado Pago" fill className="object-contain" />
-                    </div>
-                  </div>
-                </div>
+                </div>                
               </div>
             </div>
           </div>

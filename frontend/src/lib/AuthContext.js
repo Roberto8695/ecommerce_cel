@@ -16,7 +16,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
-
   useEffect(() => {
     // Verificamos si hay un usuario autenticado al cargar la aplicación
     const checkAuth = async () => {
@@ -30,13 +29,16 @@ export function AuthProvider({ children }) {
           // Si hay un error, es porque el token no es válido
           logout();
           setError('La sesión ha expirado. Por favor inicia sesión de nuevo.');
+          
+          // Redirigir a la página de login con un mensaje de error
+          router.push('/login?expired=true');
         }
       }
       setLoading(false);
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   // Función para manejar el cierre de sesión
   const handleLogout = () => {

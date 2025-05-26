@@ -31,3 +31,31 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
+/* Animaciones para el modal de éxito */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loadingBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* En lugar de usar :global directamente, exportamos las clases */
+.animateFadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animateLoadingBar {
+  animation: loadingBar 2s linear;
+}

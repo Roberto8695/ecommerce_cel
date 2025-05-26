@@ -103,7 +103,7 @@ const MarcasSectionComponent = () => {
 
   if (error) {
     return (
-      <section className="py-16 px-4 bg-gradient-to-br from-indigo-50 to-white">
+      <section  className="py-16 px-4 bg-gradient-to-br from-indigo-50 to-white">
         <div className="container mx-auto max-w-7xl text-center">
           <p className="text-red-500">{error}</p>
           <button 
@@ -118,7 +118,7 @@ const MarcasSectionComponent = () => {
   }
 
   return (
-    <section className="py-16 px-4 bg-gradient-to-br from-indigo-50 to-white relative overflow-hidden">
+    <section id='marcas' className="py-16 px-4 bg-gradient-to-br from-indigo-50 to-white relative overflow-hidden">
       {/* Elementos decorativos */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-10 -right-10 w-60 h-60 bg-indigo-200/30 rounded-full blur-3xl"></div>
@@ -138,14 +138,13 @@ const MarcasSectionComponent = () => {
         </div>
 
         {/* Sección principal de marcas - Vista para dispositivos grandes */}
-        <div className="hidden md:block">
-          <div className="grid grid-cols-5 gap-6">
+        <div className="hidden md:block">          <div className="grid grid-cols-5 gap-6">
             {marcas.map((marca, index) => (
               <Link 
-                href={`/marcas/${marca.id_marca}`} 
+                href={`/catalogo?marca=${marca.id_marca}`} 
                 key={marca.id_marca}
                 className="group"
-              >                <div 
+              ><div 
                   className={`bg-white rounded-xl shadow-md overflow-hidden p-6
                             relative group/marca before:absolute before:inset-0 before:bg-gradient-to-tr 
                             before:from-indigo-500/0 before:to-indigo-600/0 before:opacity-0 hover:before:opacity-10
@@ -201,10 +200,9 @@ const MarcasSectionComponent = () => {
               <div 
                 key={marca.id_marca}
                 className={`transition-opacity duration-500 absolute inset-0 
-                          ${activeIndex === index ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-                style={{ display: activeIndex === index ? 'block' : 'none' }}
+                          ${activeIndex === index ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}                style={{ display: activeIndex === index ? 'block' : 'none' }}
               >
-                <Link href={`/marcas/${marca.id_marca}`}>
+                <Link href={`/catalogo?marca=${marca.id_marca}`}>
                   <div className="bg-white rounded-xl shadow-md overflow-hidden p-6">                    <div className="h-48 flex items-center justify-center mb-4">
                       {marca.url_logo ? (
                         <div className="relative w-full h-full">
@@ -273,12 +271,10 @@ const MarcasSectionComponent = () => {
               </svg>
             </button>
           </div>
-        </div>
-
-        {/* Enlace a todas las marcas */}
+        </div>        {/* Enlace a todas las marcas */}
         <div className="mt-12 text-center">
           <Link 
-            href="/marcas" 
+            href="/catalogo" 
             className="inline-flex items-center px-6 py-3 border border-indigo-300 text-indigo-700 bg-white rounded-lg hover:bg-indigo-50 transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
           >
             Ver todas las marcas
