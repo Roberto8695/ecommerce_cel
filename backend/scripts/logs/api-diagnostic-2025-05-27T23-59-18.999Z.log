@@ -1,0 +1,31 @@
+[2025-05-27T23:59:18.999Z] === INICIANDO DIAGNÓSTICO DE API ===
+[2025-05-27T23:59:19.001Z] API URL: http://localhost:5000/api
+[2025-05-27T23:59:19.001Z] Fecha y hora: 2025-05-27T23:59:19.001Z
+[2025-05-27T23:59:19.001Z] ===============================
+[2025-05-27T23:59:19.002Z] 
+Probando Health Check: http://localhost:5000/api/health
+[2025-05-27T23:59:19.025Z] ❌ Error: connect ECONNREFUSED ::1:5000
+[2025-05-27T23:59:19.026Z] 
+Probando Estadísticas de Pedidos: http://localhost:5000/api/pedidos/estadisticas
+[2025-05-27T23:59:19.029Z] ❌ Error: connect ECONNREFUSED ::1:5000
+[2025-05-27T23:59:19.029Z] 
+Probando Conteo de Clientes: http://localhost:5000/api/clientes/count
+[2025-05-27T23:59:19.032Z] ❌ Error: connect ECONNREFUSED ::1:5000
+[2025-05-27T23:59:19.033Z] 
+Probando Estadísticas de Productos: http://localhost:5000/api/productos/stats
+[2025-05-27T23:59:19.034Z] ❌ Error: connect ECONNREFUSED ::1:5000
+[2025-05-27T23:59:19.035Z] 
+=== RESUMEN DE DIAGNÓSTICO ===
+[2025-05-27T23:59:19.035Z] ❌ Health Check: Error - connect ECONNREFUSED ::1:5000
+[2025-05-27T23:59:19.036Z] ❌ Estadísticas de Pedidos: Error - connect ECONNREFUSED ::1:5000
+[2025-05-27T23:59:19.036Z] ❌ Conteo de Clientes: Error - connect ECONNREFUSED ::1:5000
+[2025-05-27T23:59:19.036Z] ❌ Estadísticas de Productos: Error - connect ECONNREFUSED ::1:5000
+[2025-05-27T23:59:19.036Z] 
+=== CONCLUSIÓN ===
+[2025-05-27T23:59:19.037Z] ❌ 0/4 endpoints están funcionando. Hay problemas que requieren atención.
+[2025-05-27T23:59:19.037Z] ⚠️ El health check falló. Posibles causas:
+[2025-05-27T23:59:19.038Z]    - El servidor backend no está ejecutándose
+[2025-05-27T23:59:19.038Z]    - Hay un problema de red o firewall
+[2025-05-27T23:59:19.038Z]    - La URL del API es incorrecta
+[2025-05-27T23:59:19.039Z] 
+El registro completo está disponible en: C:\Users\rober\Desktop\ecommerce_cel\backend\scripts\logs\api-diagnostic-2025-05-27T23-59-18.999Z.log

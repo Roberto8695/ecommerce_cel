@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin.controller');
+const actividadesController = require('../controllers/actividades.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
 /**
@@ -15,4 +16,7 @@ router.post('/login', adminController.login);
 router.get('/profile', authMiddleware, adminController.getProfile);
 router.get('/all', authMiddleware, adminController.getAllAdmins);
 
-module.exports = router; 
+// Ruta para actividades recientes (en el dashboard)
+router.get('/actividades-recientes', actividadesController.getRecentActivities);
+
+module.exports = router;

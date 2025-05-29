@@ -29,11 +29,10 @@ export default function CartPage() {
       currency: 'MXN',
     }).format(price);
   };
-
   // Calcular subtotal
   const subtotal = cartTotal;
-  const envio = cartItems.length > 0 ? 99 : 0;
-  const total = subtotal + envio;
+  const envio = 0; // Eliminado costo de envío
+  const total = subtotal; // El total es igual al subtotal
   // Proceder al checkout
   const handleCheckout = () => {
     if (cartItems.length === 0) {
@@ -214,14 +213,13 @@ export default function CartPage() {
                   <h2 className="text-xl font-semibold text-gray-800">Resumen de orden</h2>
                 </div>
                 <div className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
+                  <div className="space-y-4">                    <div className="flex justify-between">
                       <p className="text-gray-600">Subtotal</p>
                       <p className="text-gray-900 font-medium">{formatPrice(subtotal)}</p>
                     </div>
                     <div className="flex justify-between">
                       <p className="text-gray-600">Envío</p>
-                      <p className="text-gray-900 font-medium">{formatPrice(envio)}</p>
+                      <p className="text-green-600 font-medium">Gratis</p>
                     </div>
                     <div className="border-t border-gray-200 pt-4 flex justify-between">
                       <p className="text-lg font-semibold text-gray-900">Total</p>

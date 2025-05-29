@@ -8,8 +8,10 @@ import { useCart } from '@/lib/CartContext';
 import { toast } from 'react-hot-toast';
 import { ArrowLeftIcon, CheckCircleIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import FileUpload from '@/components/FileUpload';
+import { createCliente } from '@/services/clientesService';
 
-export default function CheckoutPage() {  const { cartItems, cartTotal, clearCart } = useCart();
+export default function CheckoutPage() {
+  const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(1); // 1: Datos, 2: Pago, 3: Confirmación
@@ -36,12 +38,11 @@ export default function CheckoutPage() {  const { cartItems, cartTotal, clearCar
   // Estado para el comprobante de pago
   const [comprobante, setComprobante] = useState(null);
   const [comprobanteError, setComprobanteError] = useState('');
-
-  // Calcular el envío (gratis por encima de $10,000, de lo contrario $150)
-  const shippingCost = cartTotal > 10000 ? 0 : 150;
+  // Calcular el envío (siempre gratis)
+  const shippingCost = 0;
   
   // Calcular el total con envío
-  const totalWithShipping = cartTotal + shippingCost;
+  const totalWithShipping = cartTotal;
   // Verificar si hay productos en el carrito
   useEffect(() => {
     if (cartItems.length === 0 && !orderID) {
@@ -98,16 +99,39 @@ export default function CheckoutPage() {  const { cartItems, cartTotal, clearCar
   // Ir al siguiente paso
   const goToNextStep = async () => {
     if (currentStep === 1) {
-      if (!validateForm()) return;
-      
+      if (!validateForm()) return;      
       setIsLoading(true);
-        try {
+      try {
+        // Primero creamos o actualizamos el cliente
+        const clienteData = {
+          nombre: formData.name,
+          email: formData.email,
+          telefono: formData.phone,
+          direccion: `${formData.address}, ${formData.city}, ${formData.zipCode}, ${formData.state}`
+        };
+        
+        // Notificar al usuario
+        toast.loading('Guardando datos del cliente...', {
+          position: 'bottom-right',
+          id: 'creating-client'
+        });
+        
+        // Guardar los datos del cliente
+        const clienteResponse = await createCliente(clienteData);
+        toast.dismiss('creating-client');
+        
+        if (!clienteResponse.cliente) {
+          throw new Error('No se pudo crear el cliente');
+        }
+        
+        const idCliente = clienteResponse.cliente.id_cliente;
+        
         // Crear el pedido en la base de datos
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
         
         // Preparar los datos del pedido
         const pedidoData = {
-          id_cliente: 1, // En un sistema real, aquí iría el ID del cliente autenticado
+          id_cliente: idCliente, // Usamos el ID del cliente que acabamos de crear/actualizar
           total: totalWithShipping,
           metodo_pago: formData.paymentMethod,
           productos: cartItems.map(item => ({
@@ -215,13 +239,14 @@ export default function CheckoutPage() {  const { cartItems, cartTotal, clearCar
       });
     }, 1000);
   };
-
   // Formatear la cuenta regresiva
   const formatCountdown = () => {
     const minutes = Math.floor(countdown / 60);
     const seconds = countdown % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };  // Completar la orden
+  };  
+  
+  // Completar la orden
   const completeOrder = async () => {
     try {
       // Verificar que existe un comprobante para transferencia o para QR
@@ -229,8 +254,7 @@ export default function CheckoutPage() {  const { cartItems, cartTotal, clearCar
         setComprobanteError('Por favor, suba un comprobante de pago');
         return;
       }
-      
-      // Enviar el comprobante al servidor
+        // Enviar el comprobante al servidor
       if (comprobante && (formData.paymentMethod === 'transferencia' || formData.paymentMethod === 'qr')) {
         // Crear un FormData para enviar el archivo
         const formDataToSend = new FormData();
@@ -241,6 +265,7 @@ export default function CheckoutPage() {  const { cartItems, cartTotal, clearCar
           const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
           
           console.log(`Subiendo comprobante para el pedido ${orderID}:`, comprobante.name);
+          console.log(`URL de destino: ${API_URL}/pedidos/${orderID}/comprobante`);
           
           // Mostrar notificación de carga
           toast.loading('Subiendo comprobante...', {
@@ -248,21 +273,24 @@ export default function CheckoutPage() {  const { cartItems, cartTotal, clearCar
             id: 'uploading-toast'
           });
           
-          // Usar la nueva ruta de pedidos para subir el comprobante
+          // Usar la nueva ruta de pedidos para subir el comprobante con manejo de errores mejorado
           const response = await fetch(`${API_URL}/pedidos/${orderID}/comprobante`, {
             method: 'POST',
-            body: formDataToSend
+            body: formDataToSend,
+            // No incluir Content-Type para que el navegador establezca el límite correcto para FormData
+          }).catch(error => {
+            console.error('Error de red al subir comprobante:', error);
+            throw new Error('Error de conexión al servidor. Verifica tu conexión a internet.');
           });
           
           // Cerrar notificación de carga
           toast.dismiss('uploading-toast');
           
-          let data;
-          try {
+          let data;          try {
             data = await response.json();
           } catch (parseError) {
             console.error('Error al parsear la respuesta JSON:', parseError);
-            throw new Error('Error al procesar la respuesta del servidor');
+            throw new Error('Error al procesar la respuesta del servidor. El servidor puede estar caído.');
           }
           
           if (!response.ok) {
@@ -594,15 +622,10 @@ export default function CheckoutPage() {  const { cartItems, cartTotal, clearCar
                     <dt className="text-gray-600">Subtotal</dt>
                     <dd className="text-gray-900 font-medium">{formatPrice(cartTotal)}</dd>
                   </div>
-                  
-                  <div className="flex justify-between">
+                    <div className="flex justify-between">
                     <dt className="text-gray-600">Envío</dt>
-                    <dd className="text-gray-900 font-medium">
-                      {shippingCost === 0 ? (
-                        <span className="text-green-600">Gratis</span>
-                      ) : (
-                        formatPrice(shippingCost)
-                      )}
+                    <dd className="text-green-600 font-medium">
+                      Gratis
                     </dd>
                   </div>
                   

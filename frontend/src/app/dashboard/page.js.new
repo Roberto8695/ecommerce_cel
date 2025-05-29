@@ -21,10 +21,11 @@ export default function Dashboard() {
   });
   const [actividades, setActividades] = useState([]);  
   
-  // Función para cargar datos del dashboard
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);        // Datos por defecto para cada categoría (valores reales actualizados)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+          // Datos por defecto para cada categoría (valores reales actualizados)
         const defaultVentas = { 
           totalVentas: 20, 
           totalMonto: 301777, // Valor actualizado según respuesta real del servidor
@@ -32,102 +33,92 @@ export default function Dashboard() {
           ordenesPendientes: { pendientes: 8, crecimiento: 5 } 
         };
         const defaultClientes = { total: 7, nuevos: 1, crecimiento: 5 }; // Actualizado a 7 clientes según conteo actual
-      const defaultProductos = { total: 128, activos: 96, nuevos: 15, crecimiento: 12 };
-      
-      console.log('Iniciando carga de datos del dashboard');
-      
-      // Crear todas las promesas para la carga paralela
-      const promises = [
-        // Promise 1: Estadísticas de ventas
-        getDashboardStats().catch((e) => {
-          console.error('Error al obtener estadísticas de ventas:', e);
-          return defaultVentas;
-        }),
+        const defaultProductos = { total: 128, activos: 96, nuevos: 15, crecimiento: 12 };
         
-        // Promise 2: Conteo de clientes
-        getClientesCount().catch((e) => {
-          console.error('Error al obtener conteo de clientes:', e);
-          return defaultClientes;
-        }),
+        console.log('Iniciando carga de datos del dashboard');
         
-        // Promise 3: Estadísticas de productos
-        getProductosStats().catch((e) => {
-          console.error('Error al obtener estadísticas de productos:', e);
-          return defaultProductos;
-        }),
+        // Crear todas las promesas para la carga paralela
+        const promises = [
+          // Promise 1: Estadísticas de ventas
+          getDashboardStats().catch((e) => {
+            console.error('Error al obtener estadísticas de ventas:', e);
+            return defaultVentas;
+          }),
+          
+          // Promise 2: Conteo de clientes
+          getClientesCount().catch((e) => {
+            console.error('Error al obtener conteo de clientes:', e);
+            return defaultClientes;
+          }),
+          
+          // Promise 3: Estadísticas de productos
+          getProductosStats().catch((e) => {
+            console.error('Error al obtener estadísticas de productos:', e);
+            return defaultProductos;
+          }),
+          
+          // Promise 4: Actividades recientes
+          getRecentActivities().catch((e) => {
+            console.error('Error al obtener actividades recientes:', e);
+            return [];
+          })
+        ];
         
-        // Promise 4: Actividades recientes
-        getRecentActivities().catch((e) => {
-          console.error('Error al obtener actividades recientes:', e);
-          return [];
-        })
-      ];
-      
-      // Esperar a que todas las promesas se resuelvan, incluso si fallan
-      console.log('Esperando resolución de todas las promesas...');
-      const results = await Promise.all(promises);
-      console.log('Todas las promesas resueltas');
-      
-      const [ventasData, clientesData, productosData, actividadesData] = results;
-      
-      console.log('Datos recibidos - Ventas:', ventasData);
-      console.log('Datos recibidos - Clientes:', clientesData);
-      
-      // Asegurar un tiempo mínimo de carga para mejorar UX
-      setTimeout(() => {
-        // Actualizar estado con los datos que hayamos podido obtener
-        setStats({
-          ventas: {
-            total: ventasData?.totalMonto || defaultVentas.totalMonto,
-            crecimiento: ventasData?.crecimiento || defaultVentas.crecimiento,
-            totalVentas: ventasData?.totalVentas || defaultVentas.totalVentas
+        // Esperar a que todas las promesas se resuelvan, incluso si fallan
+        console.log('Esperando resolución de todas las promesas...');
+        const results = await Promise.all(promises);
+        console.log('Todas las promesas resueltas');
+        
+        const [ventasData, clientesData, productosData, actividadesData] = results;
+        
+        console.log('Datos recibidos - Ventas:', ventasData);
+        console.log('Datos recibidos - Clientes:', clientesData);
+        
+        // Asegurar un tiempo mínimo de carga para mejorar UX
+        setTimeout(() => {
+          // Actualizar estado con los datos que hayamos podido obtener
+          setStats({
+            ventas: {
+              total: ventasData?.totalMonto || defaultVentas.totalMonto,
+              crecimiento: ventasData?.crecimiento || defaultVentas.crecimiento,
+              totalVentas: ventasData?.totalVentas || defaultVentas.totalVentas
+            },
+            clientes: clientesData || defaultClientes,
+            productos: productosData || defaultProductos,
+            ordenes: ventasData?.ordenesPendientes || defaultVentas.ordenesPendientes
+          });
+          
+          setActividades(actividadesData || []);
+          setLoading(false);
+          console.log('Dashboard cargado completamente');
+        }, 800); // Pequeño retraso para asegurar una transición suave
+        
+      } catch (error) {
+        console.error('Error general al cargar datos del dashboard:', error);
+        // Establecer datos por defecto en caso de error general
+        setStats({          ventas: { 
+            total: 301777, // Valor actualizado según respuesta real del servidor
+            crecimiento: 12,
+            totalVentas: 20
           },
-          clientes: clientesData || defaultClientes,
-          productos: productosData || defaultProductos,
-          ordenes: ventasData?.ordenesPendientes || defaultVentas.ordenesPendientes
+          clientes: { total: 7, nuevos: 1, crecimiento: 5 }, // Actualizado a 7 clientes
+          productos: { total: 128, activos: 96 },
+          ordenes: { pendientes: 8, crecimiento: 5 } // Actualizado según respuesta real del servidor
         });
-        
-        setActividades(actividadesData || []);
         setLoading(false);
-        console.log('Dashboard cargado completamente');
-      }, 800); // Pequeño retraso para asegurar una transición suave
-      
-    } catch (error) {
-      console.error('Error general al cargar datos del dashboard:', error);
-      // Establecer datos por defecto en caso de error general
-      setStats({
-        ventas: {
-          total: 301777,
-          crecimiento: 12,
-          totalVentas: 20
-        },
-        clientes: { total: 7, nuevos: 1, crecimiento: 5 }, // Actualizado a 7 clientes
-        productos: { total: 128, activos: 96, nuevos: 15, crecimiento: 12 },
-        ordenes: { pendientes: 8, crecimiento: 5 }
-      });
-      setLoading(false);
-    }
-  };
-  
-  useEffect(() => {
-    // Cargar datos inicialmente
-    fetchDashboardData();
+      }
+    };
     
-    // Configurar actualización automática cada 30 segundos
-    const interval = setInterval(() => {
-      console.log('Actualizando datos del dashboard automáticamente...');
-      fetchDashboardData();
-    }, 30000); // 30 segundos
-    
-    // Limpiar intervalo al desmontar
-    return () => clearInterval(interval);
+    fetchData();
   }, []);
   
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Panel de Control</h1>
-       
+        <p className="text-sm text-gray-500">
+          {admin ? `Bienvenido ${admin.nombre}` : 'Bienvenido al sistema de gestión'}
+        </p>
       </div>
 
       {/* Información del usuario */}

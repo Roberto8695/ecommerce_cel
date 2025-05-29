@@ -101,10 +101,40 @@ const deleteProducto = async (id) => {
   }
 };
 
+// Obtener estadísticas de productos
+const getProductosStats = async () => {
+  try {
+    // Obtener total de productos
+    const totalResult = await db.query('SELECT COUNT(*) as total FROM Productos');
+    const total = parseInt(totalResult.rows[0].total);
+    
+    // Obtener productos activos (con stock > 0)
+    const activosResult = await db.query('SELECT COUNT(*) as activos FROM Productos WHERE stock > 0');
+    const activos = parseInt(activosResult.rows[0].activos);
+    
+    // Obtener productos añadidos en el último mes
+    const nuevosResult = await db.query(
+      'SELECT COUNT(*) as nuevos FROM Productos WHERE fecha_creacion >= NOW() - INTERVAL \'30 days\''
+    );
+    const nuevos = parseInt(nuevosResult.rows[0].nuevos);
+    
+    return {
+      total,
+      activos,
+      nuevos,
+      crecimiento: total > 0 ? Math.round((nuevos / total) * 100) : 0
+    };
+  } catch (error) {
+    console.error('Error al obtener estadísticas de productos:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getAllProductos,
   getProductoById,
   createProducto,
   updateProducto,
-  deleteProducto
+  deleteProducto,
+  getProductosStats
 };

@@ -15,18 +15,16 @@ router.get('/', pedidosController.getPedidos);
 // Ruta para estadísticas del dashboard (pública para evitar problemas de autenticación)
 router.get('/estadisticas', (req, res, next) => {
   console.log('Solicitando estadísticas de pedidos para el dashboard');
-  
-  // Manejar CORS manualmente para asegurar que funcione incluso sin el middleware global
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  
-  // Si es una solicitud OPTIONS (preflight), responder inmediatamente con éxito
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
   try {
+    // Manejar CORS manualmente para asegurar que funcione incluso sin el middleware global
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    // Si es una solicitud OPTIONS (preflight), responder inmediatamente con éxito
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+    
     return pedidosController.getEstadisticas(req, res);
   } catch (error) {
     console.error('Error en ruta de estadísticas de pedidos:', error);

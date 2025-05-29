@@ -1,8 +1,7 @@
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryString = searchParams.toString();
-  
-  try {
+    try {
     const response = await fetch(`http://localhost:5000/api/pedidos?${queryString}`, {
       headers: {
         'Content-Type': 'application/json',

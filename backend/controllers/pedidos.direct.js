@@ -167,6 +167,9 @@ const createPedidoDirect = async (req, res) => {
 const uploadComprobanteDirect = async (req, res) => {
   try {
     console.log('Procesando subida de comprobante...');
+    console.log('Headers recibidos:', req.headers);
+    console.log('Params recibidos:', req.params);
+    
     const uploadMiddleware = upload.single('comprobante');
     
     uploadMiddleware(req, res, async function(err) {

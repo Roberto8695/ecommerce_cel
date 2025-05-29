@@ -1,0 +1,127 @@
+[2025-05-28T00:07:07.178Z] === INICIANDO DIAGNÓSTICO DE API ===
+[2025-05-28T00:07:07.180Z] API URL: http://localhost:5000/api
+[2025-05-28T00:07:07.180Z] Fecha y hora: 2025-05-28T00:07:07.180Z
+[2025-05-28T00:07:07.181Z] ===============================
+[2025-05-28T00:07:07.181Z] 
+Probando Health Check: http://localhost:5000/api/health
+[2025-05-28T00:07:07.207Z] ❌ Error: Request failed with status code 500
+[2025-05-28T00:07:07.208Z] 📄 Status: 500
+[2025-05-28T00:07:07.208Z] 📄 Datos: {
+  "success": false,
+  "error": "Error interno del servidor",
+  "message": "db is not defined"
+}
+[2025-05-28T00:07:07.209Z] 
+Probando Estadísticas de Pedidos: http://localhost:5000/api/pedidos/estadisticas
+[2025-05-28T00:07:07.215Z] ✅ Status: 200
+[2025-05-28T00:07:07.217Z] ⏱️ Tiempo de respuesta: 6ms
+[2025-05-28T00:07:07.217Z] 📄 Datos: {
+  "success": true,
+  "data": {
+    "totalVentas": 20,
+    "totalMonto": 301777,
+    "estadosPedidos": [
+      {
+        "estado": "procesando",
+        "cantidad": "12"
+      },
+      {
+        "estado": "pendiente",
+        "cantidad": "8"
+      }
+    ],
+    "ventasDiarias": [
+      {
+        "fecha": "2025-05-27T04:00:00.000Z",
+        "cantidad": "2",
+        "total": "22068.00"
+      },
+      {
+        "fecha": "2025-05-26T04:00:00.000Z",
+        "cantidad": "7",
+        "total": "105684.00"
+      },
+      {
+        "fecha": "2025-05-20T04:00:00.000Z",
+        "cantidad": "4",
+        "total": "91105.00"
+      },
+      {
+        "fecha": "2025-05-19T04:00:00.000Z",
+        "cantidad": "7",
+        "total": "82920.00"
+      }
+    ],
+    "productosTop": [
+      {
+        "id_producto": 5,
+        "modelo": "Samsung S25 Ultra",
+        "total_vendidos": "14"
+      },
+      {
+        "id_producto": 4,
+        "modelo": "Realme 12 Pro",
+        "total_vendidos": "8"
+      },
+      {
+        "id_producto": 7,
+        "modelo": "Xiaomi 15 ultra",
+        "total_vendidos": "5"
+      },
+      {
+        "id_producto": 3,
+        "modelo": "Iphone 16 pro Maxex",
+        "total_vendidos": "5"
+      },
+      {
+        "id_producto": 6,
+        "modelo": "Vivo x200 Pro",
+        "total_vendidos": "3"
+      }
+    ],
+    "ordenesPendientes": {
+      "pendientes": 8,
+      "crecimiento": 5
+    }
+  }
+}
+[2025-05-28T00:07:07.218Z] 
+Probando Conteo de Clientes: http://localhost:5000/api/clientes/count
+[2025-05-28T00:07:07.221Z] ✅ Status: 200
+[2025-05-28T00:07:07.222Z] ⏱️ Tiempo de respuesta: 3ms
+[2025-05-28T00:07:07.222Z] 📄 Datos: {
+  "success": true,
+  "data": {
+    "total": 7,
+    "nuevos": 7,
+    "crecimiento": 100
+  }
+}
+[2025-05-28T00:07:07.222Z] 
+Probando Estadísticas de Productos: http://localhost:5000/api/productos/stats
+[2025-05-28T00:07:07.226Z] ✅ Status: 200
+[2025-05-28T00:07:07.226Z] ⏱️ Tiempo de respuesta: 3ms
+[2025-05-28T00:07:07.226Z] 📄 Datos: {
+  "success": true,
+  "data": {
+    "total": 6,
+    "activos": 6,
+    "nuevos": 6,
+    "crecimiento": 100
+  }
+}
+[2025-05-28T00:07:07.227Z] 
+=== RESUMEN DE DIAGNÓSTICO ===
+[2025-05-28T00:07:07.227Z] ❌ Health Check: Error - Request failed with status code 500
+[2025-05-28T00:07:07.232Z] ✅ Estadísticas de Pedidos: OK (6ms)
+[2025-05-28T00:07:07.232Z] ✅ Conteo de Clientes: OK (3ms)
+[2025-05-28T00:07:07.232Z] ✅ Estadísticas de Productos: OK (3ms)
+[2025-05-28T00:07:07.233Z] 
+=== CONCLUSIÓN ===
+[2025-05-28T00:07:07.233Z] ❌ 3/4 endpoints están funcionando. Hay problemas que requieren atención.
+[2025-05-28T00:07:07.233Z] ⚠️ El health check falló. Posibles causas:
+[2025-05-28T00:07:07.233Z]    - El servidor backend no está ejecutándose
+[2025-05-28T00:07:07.234Z]    - Hay un problema de red o firewall
+[2025-05-28T00:07:07.234Z]    - La URL del API es incorrecta
+[2025-05-28T00:07:07.234Z] 
+El registro completo está disponible en: C:\Users\rober\Desktop\ecommerce_cel\backend\scripts\logs\api-diagnostic-2025-05-28T00-07-07.178Z.log

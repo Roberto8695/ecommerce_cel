@@ -49,16 +49,7 @@ const SidebarComponent = () => {
       path: '/dashboard/marcas',
       icon: <TagIcon className="w-6 h-6" />
     },
-    {
-      title: 'Reportes',
-      path: '/dashboard/reportes',
-      icon: <ChartBarIcon className="w-6 h-6" />
-    },
-    {
-      title: 'Configuración',
-      path: '/dashboard/configuracion',
-      icon: <Cog6ToothIcon className="w-6 h-6" />
-    }
+    
   ];
 
   const toggleSidebar = () => {
